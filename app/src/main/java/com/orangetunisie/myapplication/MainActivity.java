@@ -1,35 +1,54 @@
 package com.orangetunisie.myapplication;
 
+import android.os.Bundle;
+import android.util.Log;
+
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import android.os.Bundle;
+import com.orangetunisie.myapplication.retrofit.ApiInterface;
+import com.orangetunisie.myapplication.retrofit.ApiResponse;
+import com.orangetunisie.myapplication.retrofit.ApiService;
+import com.orangetunisie.myapplication.retrofit.GamesAdapter;
 
-import java.util.LinkedList;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class MainActivity extends AppCompatActivity {
 
-    private final LinkedList<String> mWordList = new LinkedList<>();
+    private RecyclerView recyclerView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        recyclerView = findViewById(R.id.recycler);
+        ApiService.getRetrofit().create(ApiInterface.class)
+                .getGames()
+                .enqueue(new Callback<ApiResponse>() {
+                    @Override
+                    public void onResponse(Call<ApiResponse> call, Response<ApiResponse> response) {
+                        if (response.body() != null) {
+                            GamesAdapter adapter = new GamesAdapter(response.body().getData());
+                            recyclerView.setLayoutManager(new LinearLayoutManager(MainActivity.this));
+                            DividerItemDecoration itemDecoration =
+                                    new DividerItemDecoration(MainActivity.this, DividerItemDecoration.VERTICAL);
+                            recyclerView.addItemDecoration(itemDecoration);
+                            recyclerView.setAdapter(adapter);
+                        }
+                    }
 
-        for (int i = 0; i < 50; i++) {
-            mWordList.addLast("Word " + i);
-        }
+                    @Override
+                    public void onFailure(Call<ApiResponse> call, Throwable t) {
+                        Log.e("ERROR", "ERROR = ", t);
+                    }
+                });
 
-        WordAdapter adapter = new WordAdapter(mWordList);
-        RecyclerView recyclerView = findViewById(R.id.recycler);
-
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
-
-        DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(this, DividerItemDecoration.VERTICAL);
-        recyclerView.addItemDecoration(dividerItemDecoration);
-
-        recyclerView.setAdapter(adapter);
+        //code A
     }
+
+
 }
